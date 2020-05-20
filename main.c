@@ -7,9 +7,9 @@ int main ()
 {
 	// POpenStream s1 = { 1 } , s2 = { 2 }, s5 = { 5 };
 	POpenStream s[] = {
-		{ 1 },
-		{ 2 },
-		{ 5 }
+		{ 1 },				       // stdout
+		{ 2 },				       // stderr
+		{ 5 }				       // fd 5
 	};
 	POpen po;
 	int err;
