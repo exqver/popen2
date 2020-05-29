@@ -2,6 +2,7 @@
 #include <sys/epoll.h>
 #include <sys/wait.h>
 #include <sys/stat.h>
+#include <dirent.h>
 #include <string.h>
 #include <stdlib.h>
 #include <stdarg.h>
@@ -10,6 +11,7 @@
 #include <stdio.h>
 #include <errno.h>
 #include <alloca.h>
+#include <limits.h>
 #include "popen2.h"
 
 #ifdef MAX
@@ -22,7 +24,8 @@ extern char **environ;
 int popen2_init (popen2_t *p)
 {
 	p->search_path = 0;
-	p->poll_fd = -1;
+	p->exclusive   = 1;
+	p->poll_fd     = -1;
 	p->str  = 0;
 	p->nstr = 0;
 	p->what = "";
@@ -85,11 +88,11 @@ int popen2_destroy (popen2_t *p)
 int popen2_execve (popen2_t *po, const char *path, char *const argv[], char *const envp[])
 {
 	popen2_stream_t **s = po->str, **e = po->str + po->nstr, *ss;
-	int i, maxfd = -1, maxpipe = -1, n, l;
+	int i, maxfd = -1, maxpipe = -1, n, l, wstatus;
 	struct epoll_event event_data, fdevents[10];
-	long flags;
-	char buf[1024], *path_env = 0, *p, *next, *f = 0;
-	struct stat st;
+	long  flags;
+	char  buf[1024], *p;
+	pid_t pid;
 	
 	po->poll_fd = epoll_create1 (EPOLL_CLOEXEC);
 	if (po->poll_fd == -1) {
@@ -111,7 +114,7 @@ int popen2_execve (popen2_t *po, const char *path, char *const argv[], char *con
 		}
 	}
 
-	pid_t pid = fork ();
+	pid = fork ();
 
 	if (!pid) {				       // child
 		for (s = po->str; s < e; s++)
@@ -134,20 +137,50 @@ int popen2_execve (popen2_t *po, const char *path, char *const argv[], char *con
 				(*s)->pipes[1] = maxpipe;
 			}
 		}
-	
+
+		if (po->exclusive) {
+			DIR  *dir;
+			struct dirent *de;
+			char dirname[PATH_MAX], *end, found;
+
+			snprintf (dirname, sizeof dirname, "/proc/%d/fd", (int) getpid ());
+			dir = opendir (dirname);
+			if (!dir)
+				exit (1024);
+			while ((de = readdir (dir)) != 0) {
+				p = de->d_name;
+				if (strcmp (p, ".") == 0 || strcmp (p, "..") == 0)
+					continue;
+				n = strtol (p, &end, 10);
+				if (end == p || *end)
+					continue;
+				found = 0;
+				for (i = 0; i < po->nstr && !found; i++)
+					if (n == po->str[i]->pipes[1])
+						found = 1;
+				if (!found)
+					close (n);
+			}
+			closedir (dir);
+		}
+
 		for (s = po->str; s < e; s++) {
-			if ((*s)->fd != (*s)->pipes[1])
+			if ((*s)->fd != (*s)->pipes[1]) {
 				dup2 ((*s)->pipes[1], (*s)->fd);
+				close ((*s)->pipes[1]);
+			}
 		}
 
 		if (po->search_path && path[0] != '/') {
 #if _GNU_SOURCE
 			execvpe (path, argv, envp);
 #else
+			char *path_env = 0;
+
 			// if (envp) {
 			// 	path_env = 0;
 			// 	for (i = 0; envp[i]; i++) {
-			// 		if (strncmp (envp[i], "PATH=", 5) == 0) {
+			// 		if (strncmp (envp[i], "PATH=", 5) == 0) {   /* Taiking PATH from envp for running command itself may be quite interesting.
 			// 			path_env = envp[i] + 5;
 			// 			break;
 			// 		}
@@ -158,10 +191,13 @@ int popen2_execve (popen2_t *po, const char *path, char *const argv[], char *con
 				path_env = getenv ("PATH");
 
 			if (path_env) {
+				char *p, *next, *f = 0;
+
 				path_env = strdup (path_env);
 
 				for (p = path_env; *p; p = next)
 				{
+					struct stat st;
 					next = p + strcspn (p, ":");
 					if (*next)
 						*next++ = 0;
@@ -246,7 +282,12 @@ int popen2_execve (popen2_t *po, const char *path, char *const argv[], char *con
 	close (po->poll_fd);
 	po->poll_fd = -1;
 
-	waitpid (pid, 0, 0);
+	waitpid (pid, &wstatus, 0);
+
+	if (WIFEXITED (wstatus) && wstatus == 1024) {
+		po->what = "opendir";
+		return 1;
+	}
 
 	return 0;
 }

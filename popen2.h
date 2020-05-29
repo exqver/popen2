@@ -2,20 +2,23 @@
 #define POPEN2_H
 
 typedef struct {
-	int	fd;
+	int	fd;				       /* Descriptor to capture */
 	char   *data;
-	int	max_size;
-	int	alloced;
+	int	max_size;			       /* Received data, stored to malloced buffer. */
+						       /* May be preallocated before popen2_add_stream (). */
+	int	alloced;			       /* Allocated memory size. */
+						       /* May be preallocated before popen2_add_stream (). */
 	int	size;
 	int	pipes[2];
 } popen2_stream_t;
 
 typedef struct {
-	int	      search_path;		       /* Option: set to 1 for similar to execlp(), execvp(), execvpe(). */
+	int	      search_path;		       /* Option: Run similar to execlp(), execvp(), execvpe(). */
+	int	      exclusive;		       /* Option: Close all files descriptors but listened ones. Set by default. */
 	int	      poll_fd;
-	popen2_stream_t **str;
-	int	      nstr;
-	const char   *what;
+	popen2_stream_t **str;			       /* Streams, added with popen2_add_stream (). */
+	int	      nstr;			       /* Number of streams */
+	const char   *what;			       /* Reason of failure */
 } popen2_t;
 
 int  popen2_init (popen2_t *);

@@ -42,7 +42,8 @@ int main ()
 			       "echo 222 1>&2; "
 			       "echo 555 1>&5; "
 			       "no-such-command; "
-			       "echo Environment variables:; set",
+			       "echo Environment variables:; set; "
+			       "echo Opened files:; ls -l /proc/$$/fd;",
 			       0 };
 	char *const env[] = {
 		"PATH=/bin1:/bin2::::/bin:aaa",
@@ -78,7 +79,7 @@ int main ()
 			printf ("\n");
 			if (popen2_execve (&po, cmd, args, env) != 0) {
 				err = errno;
-				fprintf (stderr, "popen2_exec() failed. %s:%s\n", po.what, strerror (err));
+				fprintf (stderr, "popen2_execve() failed. %s:%s\n", po.what, strerror (err));
 				return 1;
 			}
 			break;
@@ -90,7 +91,7 @@ int main ()
 			printf ("\n");
 			if (popen2_execv (&po, cmd, args) != 0) {
 				err = errno;
-				fprintf (stderr, "popen2_exec() failed. %s:%s\n", po.what, strerror (err));
+				fprintf (stderr, "popen2_execv() failed. %s:%s\n", po.what, strerror (err));
 				return 1;
 			}
 			break;
@@ -100,20 +101,21 @@ int main ()
 			printf ("Args: [\"bash\", \"-c\", \"ls -lF\"]\n");
 			if (popen2_execl (&po, cmd, "bash", "-c", "ls -lF", NULL) != 0) {
 				err = errno;
-				fprintf (stderr, "popen2_exec() failed. %s:%s\n", po.what, strerror (err));
+				fprintf (stderr, "popen2_execl() failed. %s:%s\n", po.what, strerror (err));
 				return 1;
 			}
 			break;
 		case 3:
 			printf ("---- Testing popen2_execle (): ----\n");
+			cmd = "/bin/ls";
 			printf ("Command path: \"%s\"\n", cmd);
-			printf ("Args: [\"bash\", \"-c\", \"ls -lF; set\"]\n");
+			printf ("Args: [\"ls\", \"-lF\", \"/proc/self/fd\"]\n");
 			printf ("Passed environment: ");
 			dump_strings (env, -1);
 			printf ("\n");
-			if (popen2_execle (&po, cmd, "bash", "-c", "ls -lF; set", NULL, env) != 0) {
+			if (popen2_execle (&po, cmd, "ls", "-lF", "/proc/self/fd", "set", NULL, env) != 0) {
 				err = errno;
-				fprintf (stderr, "popen2_exec() failed. %s:%s\n", po.what, strerror (err));
+				fprintf (stderr, "popen2_execle() failed. %s:%s\n", po.what, strerror (err));
 				return 1;
 			}
 			break;

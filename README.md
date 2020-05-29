@@ -12,6 +12,31 @@ All 'exec' flavors are supported (execve, execv, execl, execle, execvpe, execlpe
 
  \* -- not in POSIX.
 
+Types:
+
+```
+typedef struct {
+	int	      search_path;		       /* Option: Run similar to execlp(), execvp(), execvpe(). */
+	int	      exclusive;		       /* Option: Close all files descriptors but listened ones. Set by default. */
+	popen2_stream_t **str;			       /* Streams, added with popen2_add_stream (). */
+	int	      nstr;			       /* Number of streams */
+	const char   *what;			       /* Reason of failure */
+	...
+} popen2_t;
+
+typedef struct {
+	int	fd;				/* Descriptor to capture */
+	char   *data;				/* Received data, stored to malloced buffer. */
+						/* May be preallocated before popen2_add_stream (). */
+	int	max_size;			/* Not used */
+	int	alloced;			/* Allocated memory size */
+						/* May be preallocated before popen2_add_stream (). */
+	int	size;				/* Length of stored data in 'data' */
+	...
+} popen2_stream_t;
+
+```
+
 Usage:
 
 ```
@@ -29,7 +54,6 @@ Usage:
 			       "echo file descriptor 2: 222 1>&2; "
 			       "echo file descriptor 5: 555 1>&5; "
 			       "no-such-command", 0 };
-	const char *sep = "";
 
 	if (popen2_init (&po) != 0) {
 		perror ("popen2_init");
@@ -43,7 +67,7 @@ Usage:
 
 	if (popen2_execv (&po, cmd, args) != 0) {
 		err = errno;
-		fprintf (stderr, "popen2_exec() failed. %s:%s\n", po.what, strerror (err));
+		fprintf (stderr, "popen2_execv() failed. %s:%s\n", po.what, strerror (err));
 		return 1;
 	}
 
