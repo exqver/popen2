@@ -9,6 +9,7 @@ All 'exec' flavors are supported (execve, execv, execl, execle, execvpe, execlpe
  * execl --> popen2_execl
  * execle --> popen2_execle
  * execlpe\* --> { popen_t po; po.search_path = 1; popen2_execve (&po, args, envp); }
+
  \* -- not in POSIX.
 
 Usage:
