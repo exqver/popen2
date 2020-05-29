@@ -6,12 +6,12 @@
 int main ()
 {
 	// POpenStream s1 = { 1 } , s2 = { 2 }, s5 = { 5 };
-	POpenStream s[] = {
+	popen2_stream_t s[] = {
 		{ 1 },				       // stdout
 		{ 2 },				       // stderr
 		{ 5 }				       // fd 5
 	};
-	POpen po;
+	popen2_t po;
 	int err;
 	unsigned i;
 	const char *cmd = "/bin/bash";

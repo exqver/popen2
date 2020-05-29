@@ -15,7 +15,7 @@
 #endif
 #define MAX(x,y) ((x) >= (y)? (x): (y))
 
-int popen2_init (POpen *p)
+int popen2_init (popen2_t *p)
 {
 	p->poll_fd = -1;
 	p->str  = 0;
@@ -25,11 +25,11 @@ int popen2_init (POpen *p)
 	return 0;
 }
 
-int popen2_add_stream (POpen *p, POpenStream *s, int nstream)
+int popen2_add_stream (popen2_t *p, popen2_stream_t *s, int nstream)
 {
 	int i;
 
-	p->str = (POpenStream**) realloc (p->str, sizeof *p->str * (p->nstr + nstream));\
+	p->str = (popen2_stream_t**) realloc (p->str, sizeof *p->str * (p->nstr + nstream));\
 
 	for (i = 0; i < nstream; i++) {
 		p->str[p->nstr++] = s + i;
@@ -39,9 +39,9 @@ int popen2_add_stream (POpen *p, POpenStream *s, int nstream)
 	return 0;
 }
 
-int popen2_destroy (POpen *p)
+int popen2_destroy (popen2_t *p)
 {
-	POpenStream **s = p->str, **e = p->str + p->nstr;
+	popen2_stream_t **s = p->str, **e = p->str + p->nstr;
 
 	for (; s < e; s++) {
 		if ((*s)->pipes[0] >= 0)
@@ -64,9 +64,9 @@ int popen2_destroy (POpen *p)
 	return 0;
 }
 
-int popen2_exec (POpen *p, const char *path, char *const argv[])
+int popen2_exec (popen2_t *p, const char *path, char *const argv[])
 {
-	POpenStream **s = p->str, **e = p->str + p->nstr, *ss;
+	popen2_stream_t **s = p->str, **e = p->str + p->nstr, *ss;
 	int i, maxfd = -1, maxpipe = -1, n, l;
 	struct epoll_event event_data, fdevents[10];
 	long flags;
@@ -147,7 +147,7 @@ int popen2_exec (POpen *p, const char *path, char *const argv[])
 
 	while ((n = epoll_wait (p->poll_fd, fdevents, sizeof fdevents / sizeof fdevents[0], -1)) > 0) {
 		for (i = 0; i < n; i++) {
-			ss = (POpenStream*)fdevents[i].data.ptr;
+			ss = (popen2_stream_t*)fdevents[i].data.ptr;
 			while ((l = read (ss->pipes[0], buf, sizeof buf)) > 0) {
 				if (ss->size + l > ss->alloced) {
 					ss->alloced = MAX (ss->alloced * 2, ss->size + l);

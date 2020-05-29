@@ -8,18 +8,18 @@ typedef struct {
 	int	alloced;
 	int	size;
 	int	pipes[2];
-} POpenStream;
+} popen2_stream_t;
 
 typedef struct {
 	int	      poll_fd;
-	POpenStream **str;
+	popen2_stream_t **str;
 	int	      nstr;
 	const char   *what;
-} POpen;
+} popen2_t;
 
-int popen2_init (POpen *);
-int popen2_destroy (POpen *);
-int popen2_add_stream (POpen *, POpenStream *, int nstream);
-int popen2_exec (POpen *, const char *cmd, char *const argv[]);
+int popen2_init (popen2_t *);
+int popen2_destroy (popen2_t *);
+int popen2_add_stream (popen2_t *, popen2_stream_t *, int nstream);
+int popen2_exec (popen2_t *, const char *cmd, char *const argv[]);
 
 #endif
