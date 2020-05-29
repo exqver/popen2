@@ -1,8 +1,19 @@
 # popen2
 A small module to run an external program using exec () and get its output to arbitrary file descriptors.
 
+All 'exec' flavors are supported (execve, execv, execl, execle, execvpe, execlpe).
+
+ * execve --> popen2_execve
+ * execv --> popen2_execv
+ * execvpe--> { popen_t po; po.search_path = 1; popen2_execve (&po, args, envp); }
+ * execl --> popen2_execl
+ * execle --> popen2_execle
+ * execlpe\* --> { popen_t po; po.search_path = 1; popen2_execve (&po, args, envp); }
+ \* -- not in POSIX.
+
 Usage:
 
+```
 	#include <popen2.h>
 	popen2_stream_t s[] = {
 		{ 1 },				       // stdout
@@ -29,7 +40,7 @@ Usage:
 		return 1;
 	}
 
-	if (popen2_exec (&po, cmd, args) != 0) {
+	if (popen2_execv (&po, cmd, args) != 0) {
 		err = errno;
 		fprintf (stderr, "popen2_exec() failed. %s:%s\n", po.what, strerror (err));
 		return 1;
@@ -46,3 +57,5 @@ Usage:
 
 	// Release resources.
 	popen2_destroy (&po);
+
+```
