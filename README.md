@@ -29,7 +29,6 @@ Usage:
 			       "echo file descriptor 2: 222 1>&2; "
 			       "echo file descriptor 5: 555 1>&5; "
 			       "no-such-command", 0 };
-	const char *sep = "";
 
 	if (popen2_init (&po) != 0) {
 		perror ("popen2_init");
@@ -43,7 +42,7 @@ Usage:
 
 	if (popen2_execv (&po, cmd, args) != 0) {
 		err = errno;
-		fprintf (stderr, "popen2_exec() failed. %s:%s\n", po.what, strerror (err));
+		fprintf (stderr, "popen2_execv() failed. %s:%s\n", po.what, strerror (err));
 		return 1;
 	}
 
