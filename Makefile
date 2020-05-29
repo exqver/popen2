@@ -27,6 +27,10 @@ $O/%.o: %.c
 clean:
 	$(RM) -rf $O
 
+$D/%.c.dep: %.c
+	@[ -d $(@D) ] || mkdir -p $(@D)
+	$(CC) $(DEFINE) $(INCLUDE) -MF $@ -MT "$O/$*.o $@ TAGS" -M $<
+
 ifneq ($(MAKECMDGOALS),clean)
 -include $(DFILES)
 endif
