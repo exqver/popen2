@@ -61,7 +61,7 @@ int main ()
 		}
 
 		if (popen2_add_stream (&po, s, sizeof s / sizeof s[0]) != 0) {
-			fputs ("Add stream 's1' failed.", stderr);
+			fputs ("Failed to add stream.", stderr);
 			return 1;
 		}
 

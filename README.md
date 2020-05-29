@@ -61,7 +61,7 @@ Usage:
 	}
   
 	if (popen2_add_stream (&po, s, 3) != 0) {
-		fputs ("Add stream 's1' failed.", stderr);
+		fputs ("Failed to add stream.", stderr);
 		return 1;
 	}
 
