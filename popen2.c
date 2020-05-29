@@ -166,7 +166,7 @@ int popen2_execve (popen2_t *po, const char *path, char *const argv[], char *con
 					if (*next)
 						*next++ = 0;
 					if (!*p)
-						continue;
+						p = ".";
 					f = (char*)realloc (f, strlen (p) + 1 + strlen (path) + 1);
 					strcpy (f, p);
 					strcat (f, "/");
