@@ -109,7 +109,7 @@ int main ()
 			printf ("---- Testing popen2_execle (): ----\n");
 			cmd = "/bin/ls";
 			printf ("Command path: \"%s\"\n", cmd);
-			printf ("Args: [\"ls\", \"-lF\", \"/proc/self/fd\"]\n");
+			printf ("Args: [\"ls\", \"-lF\", \"/proc/self/fd\", \"set\"]\n");
 			printf ("Passed environment: ");
 			dump_strings (env, -1);
 			printf ("\n");
